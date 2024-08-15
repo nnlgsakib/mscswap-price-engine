@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import { loadCoinConfigs } from './config/coinConfigLoader';
-import { getPrice } from './controllers/priceController';
-import { errorHandler } from './utils/errorHandler';
-import logger from './utils/logger';
+import { loadCoinConfigs } from './src/config/coinConfigLoader';
+import { getPrice } from './src/controllers/priceController';
+import { errorHandler } from './src/utils/errorHandler';
+import logger from './src/utils/logger';
 
 const app = express();
 const port = 3000;
