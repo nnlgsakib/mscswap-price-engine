@@ -1,7 +1,7 @@
 import pino from 'pino';
 
 const logger = pino({
-    level: 'info',
+    level: 'debug',  // Change the log level to 'debug'
     transport: {
         target: 'pino-pretty',
         options: {

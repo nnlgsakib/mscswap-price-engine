@@ -7,28 +7,48 @@ import logger from './utils/logger';
 import { validateCoins } from './validator/validator'; 
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Validate JSON files before starting the app
-if (validateCoins()) {
+const initializeServer = () => {
+    logger.info('Initializing server...');
+
+    // Apply CORS middleware
+    logger.debug('Applying CORS middleware.');
     app.use(cors());
 
-    // Load coin configs and create routes
+    // Load and configure coin routes
+    logger.info('Loading coin configurations.');
     const coinConfigs = loadCoinConfigs();
+    logger.info(`Loaded ${coinConfigs.length} coin configurations.`);
+
     coinConfigs.forEach(({ apiPath, pairAddress }) => {
+        logger.info(`Setting up route for ${apiPath} with pair address ${pairAddress}.`);
         app.get(apiPath, (req, res, next) => {
+            logger.debug(`Received request on ${apiPath} with query: ${JSON.stringify(req.query)}`);
             req.params.pairAddress = pairAddress;
-            getPrice(req, res, next);
+            getPrice(req, res, next)
+                .then(() => logger.debug(`Successfully processed request for ${apiPath}.`))
+                .catch((error) => {
+                    logger.error(`Error processing request for ${apiPath}: ${error.message}`);
+                    next(error);
+                });
         });
     });
 
-    // Error handling middleware
+    // Apply error handling middleware
+    logger.debug('Applying error handling middleware.');
     app.use(errorHandler);
 
-    app.listen(port, () => {
-        logger.info(`Server is running on http://localhost:${port}`);
-    });
+    // Start the server
+    app.listen(port, () => logger.info(`Server is running at http://localhost:${port}`));
+};
+
+// Validate JSON files and start the server if validation passes
+logger.info('Validating coin JSON files...');
+if (validateCoins()) {
+    logger.info('JSON validation passed. Starting server.');
+    initializeServer();
 } else {
-    logger.error('Application startup aborted due to JSON validation errors.');
-    process.exit(1); // Exit the process with a failure code
+    logger.error('JSON validation failed. Aborting startup.');
+    process.exit(1); // Exit with failure code
 }
